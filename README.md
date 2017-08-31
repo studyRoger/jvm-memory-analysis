@@ -34,6 +34,7 @@ docker run --cap-add=SYS_PTRACE --rm -it -p <YOUR HOST MACHINE IP>:9090:9090 --n
 in the docker bash, start the java main
 ```
 # those -D arguments will enable you connecting the application with the jmx in the hosting machine that run this docker container
+# the -XX:NativeMemoryTracking=detail will enable the NMT https://docs.oracle.com/javase/8/docs/technotes/guides/troubleshoot/tooldescr007.html#BABIIIAC 
 # the java application is very easy to use. input number to increase heap memory. input 'release' to release some memory.
 java -Dcom.sun.management.jmxremote \
      -Dcom.sun.management.jmxremote.local.only=false \
@@ -42,6 +43,7 @@ java -Dcom.sun.management.jmxremote \
      -Djava.rmi.server.hostname=<YOUR HOST MACHINE IP> \
      -Dcom.sun.management.jmxremote.authenticate=false \
      -Dcom.sun.management.jmxremote.ssl=false \
+     -XX:NativeMemoryTracking=detail \
      -Xms128m -Xmx256m -XX:MinHeapFreeRatio=20 -XX:MaxHeapFreeRatio=70 -XX:+UseG1GC \
      -cp build/libs/jvm-memory-analysis-1.0.jar org.roger.Memory
 ```
@@ -81,4 +83,18 @@ Heap Configuration:
 run jinfo to change the configuration on-the-fly
 ```
 jinfo -flag MaxHeapFreeRatio=50 <java process id>
+```
+run jcmd  to see the native memory allocation
+```
+jcmd <java process id> VM.native_memory summary
+```
+or use jcmd to set up a memory allocation baseline then do diff
+```
+jcmd <java process id> VM.native_memory baseline
+jcmd <java process id> VM.native_memory summary.diff
+```
+or use together with the system command pmap to bridge the memory allocation from system view and jvm view
+```
+jcmd <java process id> VM.native_memory detail
+pmap -x <java process id>
 ```
